@@ -1,0 +1,50 @@
+#### NFS ####
+==>SERVER<==
+sudo apt install nfs-kernel-server
+sudo mkdir -p /var/home
+sudo chown nobody:nogroup /var/home
+sudo chmod 777 /var/home
+sudo vim /etc/exports
+	/var/home 10.129.0.43(rw,sync,no_root_squash,no_subtree_check)	
+sudo exportfs -r
+sudo systemctl start nfs-server
+sudo showmount -e localhost
+==>CLIENT<==
+sudo apt install autofs
+sudo vim /etc/auto.master
+	+/home anestesia 10.129.0.32:/var/home/anestesia /etc/auto.home
+sudo mkdir /mnt/nfs
+sudo mount 10.129.0.32:/var/home /mnt/nfs
+df -Th
+
+#### SAMBA ####
+===>SERVER<===
+sudo apt install -y samba
+sudo mkdir -p /srv/samba/private
+sudo chown nobody:nogroup /srv/samba/private
+sudo chmod 777 /srv/samba/private
+sudo nano /etc/samba/smb.conf
+	[private]
+ 	comment = Private share
+  	path = /srv/samba/private
+  	browseable = yes
+  	guest ok = no
+  	writable = yes
+  	valid users = @smbgrp	
+sudo groupadd smbgrp
+sudo useradd -m -s /bin/bash -G smbgrp user1
+sudo smbpasswd -a user1
+sudo smbpasswd -e user1
+sudo systemctl restart smbd nmbd
+===>CLIENT<===
+sudo apt install cifs-utils smbclient
+sudo vim /etc/auto.smb
+	private -fstype=smb,credentials=/etc/smbcredentials ://10.129.0.32/private
+sudo vim /etc/smbcredentials
+	username=user1
+	password=0000
+sudo vim /etc/auto.master
+	/mnt/share /etc/auto.smb --timeout=300 --ghost
+sudo smbclient //10.129.0.32/private -A /etc/smbcredentials
+sudo vim /etc/fstab
+	//10.129.0.32/private/ /mnt/share cifs credentials=/etc/smbcredentials,vers=3.1.1,uid=1006,gid=1007,iocharset=utf8,nofail,_netdev 0 0

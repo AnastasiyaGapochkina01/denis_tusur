@@ -1,0 +1,23 @@
+#!/bin/bash
+
+DISTRO_VERSION=$(cat /etc/os-release | grep "VERSION_ID" | cut -d "=" -f2- | tr -d '"')
+KERNEL_VERSION=$(uname -r)
+CPU_CORES=$(nproc)
+MEMORY=$(free -h | grep "Mem:" | awk '{print $2}')
+IP_ADDRESS=$(ip -4 addr show | grep "inet " | head -1 | cut -d " " -f6 | cut -d "/" -f1)
+
+echo "Информация о системе:"
+echo "Версия дистрибутива: $DISTRO_VERSION"
+echo "Версия ядра: $KERNEL_VERSION"
+echo "Количество ядер процессора: $CPU_CORES"
+echo "Объем оперативной памяти: $MEMORY"
+echo "IP адрес: $IP_ADDRESS"
+
+echo "Информация о системе:" > report.txt
+echo "Версия дистрибутива: $DISTRO_VERSION" >> report.txt
+echo "Версия ядра: $KERNEL_VERSION" >> report.txt
+echo "Количество ядер процессора: $CPU_CORES" >> report.txt
+echo "Объем оперативной памяти: $MEMORY" >> report.txt
+echo "IP адрес: $IP_ADDRESS" >> report.txt
+
+echo "Информация записана в файл report.txt"
